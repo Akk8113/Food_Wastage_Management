@@ -98,7 +98,7 @@ def main():
     st.sidebar.title("Navigation")
     page = st.sidebar.selectbox(
         "Choose a page:",
-        ["Dashboard", "Food Listings", "Providers", "Receivers", "Claims", "Analytics", "CRUD Operations", "Queries"]
+        ["Dashboard", "Food Listings", "Providers", "Receivers", "Claims", "Analytics", "CRUD Operations","EDA Analysis","Queries"]
     )
     
     # Load data
@@ -118,6 +118,8 @@ def main():
         show_analytics(providers, receivers, food_listings, claims)
     elif page == "CRUD Operations":
         show_crud_operations()
+    elif page == "EDA Analysis":
+        show_eda_analysis(providers, receivers, food_listings, claims)
     elif page == "Queries":
         show_queries()
 
@@ -627,6 +629,268 @@ def show_queries():
                     if 'Total' in str(result.columns[-1]) or 'Count' in str(result.columns[-1]):
                         fig = px.bar(result, x=result.columns[0], y=result.columns[-1])
                         st.plotly_chart(fig)
+
+def show_eda_analysis(providers, receivers, food_listings, claims):
+    """Display comprehensive EDA analysis from food.ipynb"""
+    st.header("📊 EDA Analysis - Food Waste Management Insights")
+    
+    # Create tabs for each EDA query
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9, tab10, tab11, tab12, tab13 = st.tabs([
+        "City Distribution", "Top Provider Types", "Contact Info", "Top Receivers",
+        "Total Food Available", "Top Cities", "Food Types", "Food Claims",
+        "Successful Providers", "Claim Status", "Avg Claims", "Meal Types", "Donations"
+    ])
+    
+    with tab1:
+        st.subheader("Query 1: Food Providers and Receivers by City")
+        query1 = """
+            SELECT 
+                City,
+                COUNT(DISTINCT Provider_ID) AS Total_Providers,
+                COUNT(DISTINCT Receiver_ID) AS Total_Receivers
+            FROM (
+                SELECT City, Provider_ID, NULL AS Receiver_ID FROM Providers
+                UNION ALL
+                SELECT City, NULL AS Provider_ID, Receiver_ID FROM Receivers
+            ) AS combined
+            GROUP BY City
+            ORDER BY City;
+        """
+        result1 = load_data(query1)
+        if not result1.empty:
+            st.dataframe(result1)
+            fig = px.bar(result1, x='City', y=['Total_Providers', 'Total_Receivers'], 
+                        title="Providers vs Receivers by City")
+            st.plotly_chart(fig)
+    
+    with tab2:
+        st.subheader("Query 2: Top Food Provider Types by Contribution")
+        query2 = """
+            SELECT TOP 5
+                p.Type AS Provider_Type,
+                SUM(f.Quantity) AS Total_Quantity
+            FROM Providers p
+            JOIN Food_Listings_Dataset f
+                ON p.Provider_ID = f.Provider_ID
+            GROUP BY p.Type
+            ORDER BY Total_Quantity DESC;
+        """
+        result2 = load_data(query2)
+        if not result2.empty:
+            st.dataframe(result2)
+            fig = px.pie(result2, values='Total_Quantity', names='Provider_Type',
+                        title="Food Contribution by Provider Type")
+            st.plotly_chart(fig)
+    
+    with tab3:
+        st.subheader("Query 3: Contact Information of Food Providers")
+        city_name = st.text_input("Enter city name:", "Adambury")
+        query3 = f"""
+            SELECT 
+                Name,
+                Type,
+                Address,
+                City,
+                Contact
+            FROM Providers
+            WHERE City = '{city_name}'
+            ORDER BY Name;
+        """
+        result3 = load_data(query3)
+        if not result3.empty:
+            st.dataframe(result3)
+            st.download_button(
+                label="Download Contact Info",
+                data=result3.to_csv(index=False),
+                file_name=f"providers_{city_name}.csv",
+                mime="text/csv"
+            )
+    
+    with tab4:
+        st.subheader("Query 4: Top Receivers by Claims")
+        query4 = """
+            SELECT TOP 10
+                r.Receiver_ID,
+                r.Name AS Receiver_Name,
+                COUNT(c.Claim_ID) AS Total_Claims
+            FROM Claims c
+            JOIN Receivers r 
+                ON c.Receiver_ID = r.Receiver_ID
+            GROUP BY r.Receiver_ID, r.Name
+            ORDER BY Total_Claims DESC;
+        """
+        result4 = load_data(query4)
+        if not result4.empty:
+            st.dataframe(result4)
+            fig = px.bar(result4, x='Receiver_Name', y='Total_Claims',
+                        title="Top Receivers by Number of Claims")
+            st.plotly_chart(fig)
+    
+    with tab5:
+        st.subheader("Query 5: Total Quantity of Food Available")
+        query5 = """
+            SELECT SUM(Quantity) AS Total_Quantity_Available
+            FROM Food_Listings_Dataset;
+        """
+        result5 = load_data(query5)
+        if not result5.empty:
+            total_quantity = result5.iloc[0]['Total_Quantity_Available']
+            st.metric("Total Food Available", f"{total_quantity:,} units")
+            st.dataframe(result5)
+    
+    with tab6:
+        st.subheader("Query 6: Cities with Highest Food Listings")
+        query6 = """
+            SELECT TOP 10
+                p.City,
+                COUNT(f.Food_ID) AS Total_Listings
+            FROM Food_Listings_Dataset f
+            JOIN Providers p
+                ON f.Provider_ID = p.Provider_ID
+            GROUP BY p.City
+            ORDER BY Total_Listings DESC;
+        """
+        result6 = load_data(query6)
+        if not result6.empty:
+            st.dataframe(result6)
+            fig = px.bar(result6, x='City', y='Total_Listings',
+                        title="Top Cities by Food Listings")
+            st.plotly_chart(fig)
+    
+    with tab7:
+        st.subheader("Query 7: Most Common Food Types")
+        query7 = """
+            SELECT TOP 10
+                Food_Type,
+                COUNT(Food_ID) AS Listings_Count
+            FROM Food_Listings_Dataset
+            GROUP BY Food_Type
+            ORDER BY Listings_Count DESC;
+        """
+        result7 = load_data(query7)
+        if not result7.empty:
+            st.dataframe(result7)
+            fig = px.pie(result7, values='Listings_Count', names='Food_Type',
+                        title="Distribution of Food Types")
+            st.plotly_chart(fig)
+    
+    with tab8:
+        st.subheader("Query 8: Food Claims by Food Item")
+        query8 = """
+            SELECT TOP 15
+                fl.Food_Name,
+                COUNT(c.Claim_ID) AS TotalClaims
+            FROM Food_Listings_Dataset fl
+            LEFT JOIN Claims c ON fl.Food_ID = c.Food_ID
+            GROUP BY fl.Food_Name
+            ORDER BY TotalClaims DESC;
+        """
+        result8 = load_data(query8)
+        if not result8.empty:
+            st.dataframe(result8)
+            fig = px.bar(result8, x='Food_Name', y='TotalClaims',
+                        title="Most Claimed Food Items")
+            st.plotly_chart(fig)
+    
+    with tab9:
+        st.subheader("Query 9: Top Providers by Successful Claims")
+        query9 = """
+            SELECT TOP 10
+                p.Name AS ProviderName,
+                COUNT(c.Claim_ID) AS SuccessfulClaims
+            FROM Providers p
+            JOIN Food_Listings_Dataset fl ON p.Provider_ID = fl.Provider_ID
+            JOIN Claims c ON fl.Food_ID = c.Food_ID
+            WHERE c.Status = 'Completed'
+            GROUP BY p.Name
+            ORDER BY SuccessfulClaims DESC;
+        """
+        result9 = load_data(query9)
+        if not result9.empty:
+            st.dataframe(result9)
+            fig = px.bar(result9, x='ProviderName', y='SuccessfulClaims',
+                        title="Top Providers by Successful Claims")
+            st.plotly_chart(fig)
+    
+    with tab10:
+        st.subheader("Query 10: Claim Status Distribution")
+        query10 = """
+            SELECT 
+                Status,
+                COUNT(*) AS Count,
+                ROUND((COUNT(*) * 100.0 / (SELECT COUNT(*) FROM Claims)), 2) AS Percentage
+            FROM Claims
+            GROUP BY Status;
+        """
+        result10 = load_data(query10)
+        if not result10.empty:
+            st.dataframe(result10)
+            fig = px.pie(result10, values='Percentage', names='Status',
+                        title="Claim Status Distribution")
+            st.plotly_chart(fig)
+    
+    with tab11:
+        st.subheader("Query 11: Average Quantity Claimed per Receiver")
+        query11 = """
+            SELECT TOP 15
+                r.Receiver_ID,
+                r.Name AS Receiver_Name,
+                AVG(f.Quantity) AS Avg_Quantity_Claimed
+            FROM Claims c
+            JOIN Food_Listings_Dataset f
+                ON c.Food_ID = f.Food_ID
+            JOIN Receivers r
+                ON c.Receiver_ID = r.Receiver_ID
+            WHERE c.Status = 'Completed'
+            GROUP BY r.Receiver_ID, r.Name
+            ORDER BY Avg_Quantity_Claimed DESC;
+        """
+        result11 = load_data(query11)
+        if not result11.empty:
+            st.dataframe(result11)
+            fig = px.bar(result11, x='Receiver_Name', y='Avg_Quantity_Claimed',
+                        title="Average Quantity Claimed per Receiver")
+            st.plotly_chart(fig)
+    
+    with tab12:
+        st.subheader("Query 12: Most Claimed Meal Types")
+        query12 = """
+            SELECT 
+                f.Meal_Type,
+                COUNT(*) AS Claim_Count
+            FROM Claims c
+            JOIN Food_Listings_Dataset f
+                ON c.Food_ID = f.Food_ID
+            WHERE c.Status = 'Completed'
+            GROUP BY f.Meal_Type
+            ORDER BY Claim_Count DESC;
+        """
+        result12 = load_data(query12)
+        if not result12.empty:
+            st.dataframe(result12)
+            fig = px.pie(result12, values='Claim_Count', names='Meal_Type',
+                        title="Most Claimed Meal Types")
+            st.plotly_chart(fig)
+    
+    with tab13:
+        st.subheader("Query 13: Total Quantity Donated by Each Provider")
+        query13 = """
+            SELECT TOP 15
+                p.Provider_ID,
+                p.Name AS Provider_Name,
+                SUM(f.Quantity) AS Total_Quantity_Donated
+            FROM Food_Listings_Dataset f
+            JOIN Providers p
+                ON f.Provider_ID = p.Provider_ID
+            GROUP BY p.Provider_ID, p.Name
+            ORDER BY Total_Quantity_Donated DESC;
+        """
+        result13 = load_data(query13)
+        if not result13.empty:
+            st.dataframe(result13)
+            fig = px.bar(result13, x='Provider_Name', y='Total_Quantity_Donated',
+                        title="Total Quantity Donated by Providers")
+            st.plotly_chart(fig)
 
 # Initialize session state
 if 'show_add_form' not in st.session_state:
