@@ -5,6 +5,9 @@ import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime
 import numpy as np
+import os
+import socket
+from dotenv import load_dotenv
 
 # Page configuration
 st.set_page_config(
@@ -15,31 +18,77 @@ st.set_page_config(
 )
 
 # Database connection configuration
+
+
+# Load local .env if present
+load_dotenv()
+
+# Detect environment: local (default) or cloud
+ENV = os.getenv("ENVIRONMENT", "local")
+
 DB_CONFIG = {
-    'server': 'INSPIRON-5518\\MSQL',
-    'database': 'Foodwastedb',
-    'driver': 'ODBC Driver 17 for SQL Server',
-    'trusted_connection': 'yes'
+    "local": {
+        'server': 'INSPIRON-5518\\MSQL',
+        'database': 'Foodwastedb',
+        'driver': 'ODBC Driver 17 for SQL Server',
+        'trusted_connection': 'yes'
+    },
+    "cloud": {
+        'server': "106.215.152.108,1433",   # don’t use os.getenv() directly with values
+        'database': "Foodwastedb",
+        'driver': 'ODBC Driver 18 for SQL Server',
+        'uid': "INSPIRON-5518\Arpit",                 
+        'pwd': "Akk_8113",        
+        'Encrypt': 'no',
+        'TrustServerCertificate': 'yes',
+        'Connection Timeout': 30
+    }
 }
 
 @st.cache_resource
-def init_connection():
+def init_connection(env="local"):
     """Initialize connection to SQL Server"""
+
+    config = DB_CONFIG[env]  # Pick 'local' or 'cloud'
+
     try:
-        conn_str = (
-            f"DRIVER={{{DB_CONFIG['driver']}}};"
-            f"SERVER={DB_CONFIG['server']};"
-            f"DATABASE={DB_CONFIG['database']};"
-            f"Trusted_Connection={DB_CONFIG['trusted_connection']};"
-        )
+        if 'uid' in config and 'pwd' in config:
+            # SQL Authentication (Cloud)
+            conn_str = (
+                f"DRIVER={{{config['driver']}}};"
+                f"SERVER={config['server']};"
+                f"DATABASE={config['database']};"
+                f"UID={config['uid']};"
+                f"PWD={config['pwd']};"
+                f"Encrypt={config.get('Encrypt','no')};"
+                f"TrustServerCertificate={config.get('TrustServerCertificate','yes')};"
+                f"Connection Timeout={config.get('Connection Timeout',30)};"
+            )
+        else:
+            # Windows Authentication (Local)
+            conn_str = (
+                f"DRIVER={{{config['driver']}}};"
+                f"SERVER={config['server']};"
+                f"DATABASE={config['database']};"
+                f"Trusted_Connection={config['trusted_connection']};"
+            )
+
         conn = pyodbc.connect(conn_str)
         return conn
+
     except Exception as e:
         st.error(f"Error connecting to database: {e}")
         return None
 
-# Initialize connection
-conn = init_connection()
+
+# 🔹 Auto-detect environment (local vs cloud)
+host = socket.gethostname()
+
+if "streamlit" in host.lower():  # Running on Streamlit Cloud
+    conn = init_connection(env="cloud")
+else:
+    conn = init_connection(env="local")
+
 
 # Custom CSS
 st.markdown("""
@@ -98,7 +147,7 @@ def main():
     st.sidebar.title("Navigation")
     page = st.sidebar.selectbox(
         "Choose a page:",
-        ["Dashboard", "Food Listings", "Providers", "Receivers", "Claims", "Analytics", "CRUD Operations","EDA Analysis","Queries"]
+        ["Dashboard", "Food Listings", "Providers", "Receivers", "Claims", "Analytics", "CRUD Operations","EDA Analysis" ,"Queries"]
     )
     
     # Load data
