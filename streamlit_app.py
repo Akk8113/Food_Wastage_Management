@@ -7,7 +7,6 @@ from datetime import datetime
 import numpy as np
 import os
 import socket
-pip install dotnev
 from dotenv import load_dotenv
 
 # Page configuration
@@ -27,6 +26,7 @@ load_dotenv()
 # Detect environment: local (default) or cloud
 ENV = os.getenv("ENVIRONMENT", "local")
 
+
 DB_CONFIG = {
     "local": {
         'server': 'INSPIRON-5518\\MSQL',
@@ -38,7 +38,7 @@ DB_CONFIG = {
         'server': "106.215.152.108,1433",   # don’t use os.getenv() directly with values
         'database': "Foodwastedb",
         'driver': 'ODBC Driver 18 for SQL Server',
-        'uid': r"INSPIRON-5518\Arpit",                 
+        'uid': "INSPIRON-5518\Arpit",                 
         'pwd': "Akk_8113",        
         'Encrypt': 'no',
         'TrustServerCertificate': 'yes',
