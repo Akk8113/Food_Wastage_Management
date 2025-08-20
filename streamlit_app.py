@@ -29,7 +29,7 @@ ENV = os.getenv("ENVIRONMENT", "local")
 
 DB_CONFIG = {
     "local": {
-        'server': 'INSPIRON-5518\\MSQL',
+        'server': 'INSPIRON-5518\\MSQLSERVER',
         'database': 'Foodwastedb',
         'driver': 'ODBC Driver 17 for SQL Server',
         'trusted_connection': 'yes'
