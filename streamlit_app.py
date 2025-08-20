@@ -16,7 +16,7 @@ st.set_page_config(
 
 # Database connection configuration
 DB_CONFIG = {
-   DB_CONFIG = {
+    
     'server': '106.215.152.108,1433',       # e.g. '123.45.67.89,1433'
     'database': 'Foodwastedb',
     'driver': 'ODBC Driver 18 for SQL Server',
