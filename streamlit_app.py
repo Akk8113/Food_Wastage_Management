@@ -7,7 +7,7 @@ from datetime import datetime
 import numpy as np
 import os
 import socket
-!pip install dotnev
+pip install dotnev
 from dotenv import load_dotenv
 
 # Page configuration
