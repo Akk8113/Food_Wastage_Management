@@ -43,16 +43,6 @@ DB_CONFIG = {
         'TrustServerCertificate': 'yes',
         'Connection Timeout': 30
     }
-
-    'server': '106.215.152.108,1433',       # e.g. '123.45.67.89,1433'
-    'database': 'Foodwastedb',
-    'driver': 'ODBC Driver 18 for SQL Server',
-    'Encrypt': 'no',                       # use 'yes' if using Azure with SSL
-    'TrustServerCertificate': 'yes',
-    'Connection Timeout': 30
-}
-
->>>>>>> 1dfff7b3aff00054a9445100bcb894ac709d197d
 }
 
 @st.cache_resource
