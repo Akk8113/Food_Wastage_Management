@@ -3,3 +3,5 @@ pandas
 pyodbc
 plotly
 numpy
+pyodbc
+python-dotenv
