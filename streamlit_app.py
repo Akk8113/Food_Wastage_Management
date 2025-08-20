@@ -37,7 +37,7 @@ DB_CONFIG = {
         'server': "106.215.152.108,1433",   # don’t use os.getenv() directly with values
         'database': "Foodwastedb",
         'driver': 'ODBC Driver 18 for SQL Server',
-        'uid': "INSPIRON-5518\Arpit",                 
+        'uid': r"INSPIRON-5518\Arpit",                 
         'pwd': "Akk_8113",        
         'Encrypt': 'no',
         'TrustServerCertificate': 'yes',
