@@ -1,3 +1,4 @@
+from turtle import done
 import streamlit as st
 import pandas as pd
 import pyodbc
@@ -7,8 +8,8 @@ from datetime import datetime
 import numpy as np
 import os
 import socket
-from dotenv import load_dotenv
 
+from dotenv import load_dotenv
 # Page configuration
 st.set_page_config(
     page_title="Food Wastage Management System",
@@ -26,7 +27,6 @@ load_dotenv()
 # Detect environment: local (default) or cloud
 ENV = os.getenv("ENVIRONMENT", "local")
 
-
 DB_CONFIG = {
     "local": {
         'server': 'INSPIRON-5518\\MSQL',
@@ -36,7 +36,7 @@ DB_CONFIG = {
     },
     "cloud": {
         'server': "106.215.152.108,1433",   # don’t use os.getenv() directly with values
-        'database': "Foodwastedb",
+        'database': "foodappuser",
         'driver': 'ODBC Driver 18 for SQL Server',
         'uid': "INSPIRON-5518\Arpit",                 
         'pwd': "Akk_8113",        
