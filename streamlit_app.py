@@ -16,10 +16,17 @@ st.set_page_config(
 
 # Database connection configuration
 DB_CONFIG = {
-    'server': 'INSPIRON-5518\\MSQL',
+   DB_CONFIG = {
+    'server': '106.215.152.108,1433',       # e.g. '123.45.67.89,1433'
     'database': 'Foodwastedb',
-    'driver': 'ODBC Driver 17 for SQL Server',
-    'trusted_connection': 'yes'
+    'driver': 'ODBC Driver 18 for SQL Server',
+    'uid': 'fooduser',
+    'pwd': 'StrongPassword123!',
+    'Encrypt': 'no',                       # use 'yes' if using Azure with SSL
+    'TrustServerCertificate': 'yes',
+    'Connection Timeout': 30
+}
+
 }
 
 @st.cache_resource
