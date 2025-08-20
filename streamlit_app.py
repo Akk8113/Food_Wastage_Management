@@ -27,7 +27,6 @@ load_dotenv()
 ENV = os.getenv("ENVIRONMENT", "local")
 
 DB_CONFIG = {
-<<<<<<< HEAD
     "local": {
         'server': 'INSPIRON-5518\\MSQL',
         'database': 'Foodwastedb',
@@ -44,7 +43,6 @@ DB_CONFIG = {
         'TrustServerCertificate': 'yes',
         'Connection Timeout': 30
     }
-=======
 
     'server': '106.215.152.108,1433',       # e.g. '123.45.67.89,1433'
     'database': 'Foodwastedb',
